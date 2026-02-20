@@ -716,6 +716,15 @@
             .main-content { margin-left: 0; padding-bottom: 84px; }
             .players-grid { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); }
         }
+
+        /* 换人模态框：把球员卡摊开为方形多列网格，减少滚动 */
+        #substitution-modal .modal-content { max-height: 80vh; overflow: auto; }
+        #substitution-modal .players-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap:10px; align-items:stretch; }
+        #substitution-modal .player-card { padding:8px; min-height:0; aspect-ratio: 1 / 1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; }
+        #substitution-modal .player-number { font-size:18px; font-weight:800; }
+        #substitution-modal .player-name { font-size:12px; }
+        /* 在模态框内选中高亮不要太放大以免挤占布局 */
+        #substitution-modal .player-card.active { transform: translateY(-4px); border:2px solid var(--primary); box-shadow:0 12px 24px rgba(10,132,255,0.06); }
     </style>
 </head>
 <body>
