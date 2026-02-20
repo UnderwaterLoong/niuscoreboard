@@ -725,9 +725,34 @@
         #substitution-modal .player-name { font-size:12px; }
         /* 在模态框内选中高亮不要太放大以免挤占布局 */
         #substitution-modal .player-card.active { transform: translateY(-4px); border:2px solid var(--primary); box-shadow:0 12px 24px rgba(10,132,255,0.06); }
+
+        /* 闪烁遮罩：用于得分庆祝（绿色）与掉血（红色） */
+        .flash-overlay {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0;
+            z-index: 1500;
+            transition: opacity 0.18s ease;
+            mix-blend-mode: screen;
+            will-change: opacity;
+        }
+
+        .flash-overlay.show { animation: flashAnim 360ms ease-out forwards; }
+        .flash-overlay.green { background: rgba(50,215,75,0.86); }
+        .flash-overlay.red { background: rgba(255,69,58,0.86); }
+
+        @keyframes flashAnim {
+            0% { opacity: 0; }
+            20% { opacity: 0.95; }
+            100% { opacity: 0; }
+        }
     </style>
 </head>
 <body>
+    <!-- 全屏闪烁遮罩（用于得分庆祝与掉血提示） -->
+    <div id="flash-overlay" class="flash-overlay" aria-hidden="true"></div>
+
     <div class="container">
         <header>
             <div class="header-content">
@@ -1384,6 +1409,8 @@
                 // 更新比分显示
                 updateScoreDisplay();
                 renderPlayers();
+                // 庆祝闪烁
+                flashCelebration();
                 
                 // 保存历史记录
                 prevState.newPoints = player.points;
@@ -1448,6 +1475,8 @@
                 // 更新比分显示
                 updateScoreDisplay();
                 renderPlayers();
+                // 罚球命中也给予庆祝闪烁
+                flashCelebration();
                 
                 // 保存历史记录
                 prevState.newPoints = player.points;
@@ -1563,6 +1592,8 @@
                 awayScore += currentShotPoints;
                 opponentData.points += currentShotPoints;
                 addEvent(`对手命中${currentShotPoints}分球`);
+                // 对手得分时短暂红色提示表示掉血
+                flashDamage();
             } else {
                 addEvent(`对手${currentShotPoints}分球未命中`);
             }
@@ -1600,6 +1631,8 @@
                 awayScore += 1;
                 opponentData.points += 1;
                 addEvent(`对手罚球命中`);
+                // 对手罚球命中也触发红色闪烁
+                flashDamage();
             } else {
                 addEvent(`对手罚球未命中`);
             }
@@ -1932,6 +1965,24 @@
             document.getElementById('home-score').textContent = homeScore;
             document.getElementById('away-score').textContent = awayScore;
         }
+
+        // 闪烁特效：绿色庆祝 / 红色掉血
+        function flashColor(color) {
+            const overlay = document.getElementById('flash-overlay');
+            if (!overlay) return;
+            overlay.classList.remove('green', 'red', 'show');
+            // 强制重绘以确保动画可以重新触发
+            void overlay.offsetWidth;
+            overlay.classList.add(color);
+            overlay.classList.add('show');
+            setTimeout(() => {
+                overlay.classList.remove('show');
+                setTimeout(() => overlay.classList.remove(color), 300);
+            }, 360);
+        }
+
+        function flashCelebration() { flashColor('green'); }
+        function flashDamage() { flashColor('red'); }
         
         // 更新场上球员计数
         function updatePlayingCount() {
